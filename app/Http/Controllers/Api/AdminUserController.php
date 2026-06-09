@@ -43,9 +43,16 @@ class AdminUserController extends Controller
         $query->paginate($request->integer('per_page', 15))
     );
 }
+private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],

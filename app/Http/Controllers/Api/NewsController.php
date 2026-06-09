@@ -38,11 +38,13 @@ class NewsController extends Controller
 
     public function store(Request $request)
 {
+
+$this->ensureAdmin($request);
     $data = $request->validate([
         'title' => ['required', 'string', 'max:255'],
         'image' => ['nullable', 'image', 'max:2048'], // <= файл
         'published_at' => ['nullable', 'date'],
-        'text' => ['nullable', 'string'],
+        'text' => ['nullable', 'string', 'max:5000'],
     ]);
 
     if ($request->hasFile('image')) {
@@ -55,13 +57,20 @@ class NewsController extends Controller
     return response()->json($news, 201);
 }
 
+  private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
+
     public function update(Request $request, News $news)
 {
     $data = $request->validate([
         'title' => ['sometimes', 'string', 'max:255'],
         'image' => ['nullable', 'image', 'max:2048'],
         'published_at' => ['nullable', 'date'],
-        'text' => ['nullable', 'string'],
+        'text' => ['nullable', 'string', 'max:5000'],
     ]);
 
    if ($request->hasFile('image')) {

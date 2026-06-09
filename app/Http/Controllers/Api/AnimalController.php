@@ -64,13 +64,15 @@ class AnimalController extends Controller
 
     public function store(Request $request)
     {
+
+    $this->ensureAdmin($request);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'species' => ['required', 'string', 'max:255'],
             'age' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:255'],
             'status' => ['nullable', 'in:looking_home,treatment,adopted'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:3000'],
             'photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
@@ -94,7 +96,7 @@ class AnimalController extends Controller
             'age' => ['sometimes', 'required', 'string', 'max:255'],
             'city' => ['sometimes', 'required', 'string', 'max:255'],
             'status' => ['sometimes', 'required', 'in:looking_home,treatment,adopted'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:3000'],
             'photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
@@ -124,4 +126,10 @@ class AnimalController extends Controller
             'message' => 'Животное удалено',
         ]);
     }
+    private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 }

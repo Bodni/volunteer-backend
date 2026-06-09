@@ -32,21 +32,26 @@ class RewardOrderController extends Controller
         $query->where('status', $request->status);
     }
 
-    if ($user->role === 'volunteer') {
-        $query->where('user_id', $user->id);
-    } elseif ($user->role !== 'admin') {
-        return response()->json([
-            'message' => 'Доступ запрещён',
-        ], 403);
-    }
+  if ($user->role === 'admin' && $request->boolean('all')) {
+    // админ может получить все обмены только явно
+} else {
+    $query->where('user_id', $user->id);
+}
 
     return response()->json(
         $query->paginate($request->integer('per_page', 15))
     );
 }
+private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
         $user = $request->user();
 
         if (!$user) {
@@ -86,6 +91,8 @@ class RewardOrderController extends Controller
                     'message' => 'Недостаточно баллов',
                 ], 422);
             }
+            $user->decrement('points', $reward->price_points);
+$reward->decrement('stock');
 
             $freshUser->points = (int) $freshUser->points - (int) $reward->price_points;
             $freshUser->save();
@@ -138,4 +145,21 @@ class RewardOrderController extends Controller
             ])
         );
     }
+
+    public function destroy(Request $request, RewardOrder $rewardOrder)
+{
+    $user = $request->user();
+
+    if (!$user || $user->role !== 'admin') {
+        return response()->json([
+            'message' => 'Доступ запрещён',
+        ], 403);
+    }
+
+    $rewardOrder->delete();
+
+    return response()->json([
+        'message' => 'Заявка на обмен удалена',
+    ]);
+}
 }

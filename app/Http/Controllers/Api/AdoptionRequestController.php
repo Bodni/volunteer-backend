@@ -30,14 +30,21 @@ class AdoptionRequestController extends Controller
         $query->paginate($request->integer('per_page', 15))
     );
 }
+private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
         $data = $request->validate([
             'animal_name' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:255'],
-            'message' => ['nullable', 'string'],
+            'message' => ['nullable', 'string', 'max:2000'],
             'status' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -54,7 +61,7 @@ class AdoptionRequestController extends Controller
             'animal_name' => ['sometimes', 'string', 'max:255'],
             'name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['sometimes', 'string', 'max:255'],
-            'message' => ['nullable', 'string'],
+            'message' => ['nullable', 'string', 'max:2000'],
             'status' => ['sometimes', 'string', 'max:255'],
         ]);
 

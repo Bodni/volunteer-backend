@@ -24,13 +24,20 @@ class FoundRequestController extends Controller
         $query->paginate($request->integer('per_page', 15))
     );
 }
+private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 
     public function store(Request $request)
 {
+    $this->ensureAdmin($request);
     $data = $request->validate([
         'city' => ['required', 'string', 'max:255'],
         'address' => ['required', 'string', 'max:255'],
-        'description' => ['nullable', 'string'],
+        'description' => ['nullable', 'string', 'max:3000'],
         'photo' => ['nullable', 'image', 'max:5120'],
     ]);
 
@@ -51,7 +58,7 @@ class FoundRequestController extends Controller
         $data = $request->validate([
             'city' => ['sometimes', 'string', 'max:255'],
             'address' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:3000'],
             'status' => ['sometimes', 'string', 'max:255'],
             'photo' => ['nullable', 'image', 'max:5120'],
         ]);

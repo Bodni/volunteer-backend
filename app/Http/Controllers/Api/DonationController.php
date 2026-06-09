@@ -16,13 +16,20 @@ class DonationController extends Controller
             ->paginate($request->integer('per_page', 5))
     );
 }
+private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
         $data = $request->validate([
             'goal' => ['required', 'integer', 'min:0'],
             'raised' => ['required', 'integer', 'min:0'],
-            'text' => ['nullable', 'string'],
+            'text' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $donation = Donation::create($data);
@@ -35,7 +42,7 @@ class DonationController extends Controller
         $data = $request->validate([
             'goal' => ['sometimes', 'integer', 'min:0'],
             'raised' => ['sometimes', 'integer', 'min:0'],
-            'text' => ['nullable', 'string'],
+            'text' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $donation->update($data);

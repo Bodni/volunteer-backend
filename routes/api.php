@@ -14,10 +14,9 @@ use App\Http\Controllers\Api\RewardOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::middleware('throttle:10,1')->post('/login', [AuthController::class, 'login']);
+    Route::middleware('throttle:3,1')->post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::middleware('throttle:5,1')->post('/reset-password', [AuthController::class, 'resetPassword']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
@@ -109,4 +108,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reward-orders', [RewardOrderController::class, 'index']);
     Route::post('/reward-orders', [RewardOrderController::class, 'store']);
     Route::put('/reward-orders/{rewardOrder}', [RewardOrderController::class, 'update']);
+    Route::delete('/reward-orders/{rewardOrder}', [RewardOrderController::class, 'destroy']);
+
 });

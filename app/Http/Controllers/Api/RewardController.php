@@ -52,9 +52,16 @@ class RewardController extends Controller
 
         return response()->json($reward);
     }
+    private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
         $user = $request->user();
 
         if (!$user || $user->role !== 'admin') {
@@ -66,7 +73,7 @@ class RewardController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'partner_name' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:3000'],
             'image' => ['nullable', 'image', 'max:5120'],
             'price_points' => ['required', 'integer', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
@@ -100,7 +107,7 @@ class RewardController extends Controller
         $data = $request->validate([
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'partner_name' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:3000'],
             'image' => ['nullable', 'image', 'max:5120'],
             'price_points' => ['sometimes', 'required', 'integer', 'min:0'],
             'stock' => ['sometimes', 'required', 'integer', 'min:0'],

@@ -19,11 +19,14 @@ class User extends Authenticatable
         'points',
         'avatar',
         'volunteer_status',
+        'password_reset_code',
+'password_reset_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'password_reset_code',
     ];
 
     protected function casts(): array
@@ -31,6 +34,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'password_reset_expires_at' => 'datetime',
         ];
     }
     public function rewardOrders()

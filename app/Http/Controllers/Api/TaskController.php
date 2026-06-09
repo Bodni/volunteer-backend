@@ -31,12 +31,19 @@ class TaskController extends Controller
         $query->paginate($request->integer('per_page', 15))
     );
 }
+private function ensureAdmin(Request $request)
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        abort(403, 'Доступ запрещён');
+    }
+}
 
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:3000'],
             'status' => ['nullable', 'string', 'max:255'],
             'assigned_to' => ['nullable', 'exists:users,id'],
             'points' => ['nullable', 'integer'],
@@ -64,7 +71,7 @@ class TaskController extends Controller
 
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:3000'],
             'status' => ['sometimes', 'string', 'max:255'],
             'assigned_to' => ['nullable', 'exists:users,id'],
             'points' => ['nullable', 'integer'],
