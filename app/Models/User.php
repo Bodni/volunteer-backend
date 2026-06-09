@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-
+use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\ResetPasswordNotification;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -19,14 +20,11 @@ class User extends Authenticatable
         'points',
         'avatar',
         'volunteer_status',
-        'password_reset_code',
-'password_reset_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
-        'password_reset_code',
     ];
 
     protected function casts(): array
@@ -34,7 +32,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'password_reset_expires_at' => 'datetime',
         ];
     }
     public function rewardOrders()
@@ -46,4 +43,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Task::class, 'assigned_to');
     }
+public function sendPasswordResetNotification($token)
+{
+    $url = env('FRONTEND_URL') . '/reset-password?token=' . $token . '&email=' . urlencode($this->email);
+
+    $this->notify(new ResetPasswordNotification($url));
+}
 }
