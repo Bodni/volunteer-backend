@@ -65,45 +65,49 @@ private function ensureAdmin(Request $request)
     }
 
     public function update(Request $request, Task $task)
-    {
-        $oldAssignedTo = $task->assigned_to;
-        $oldStatus = $task->status;
+{
+    $oldAssignedTo = $task->assigned_to;
+    $oldStatus = $task->status;
 
-        $data = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:3000'],
-            'status' => ['sometimes', 'string', 'max:255'],
-            'assigned_to' => ['nullable', 'exists:users,id'],
-            'points' => ['nullable', 'integer'],
-        ]);
+    $data = $request->validate([
+        'title' => ['sometimes', 'string', 'max:255'],
+        'description' => ['nullable', 'string'],
+        'status' => ['sometimes', 'string', 'max:255'],
+        'assigned_to' => ['nullable', 'exists:users,id'],
+        'points' => ['nullable', 'integer'],
+        'photo' => ['nullable', 'image', 'max:5120'],
+    ]);
 
-        $task->update($data);
-
-        // Начисляем баллы только при первом подтверждении done_pending -> done
-        if (
-            $oldStatus === 'done_pending' &&
-            $task->status === 'done' &&
-            $task->assigned_to
-        ) {
-            $user = User::query()->find($task->assigned_to);
-
-            if ($user) {
-                $user->points = (int) $user->points + (int) ($task->points ?? 10);
-                $user->save();
-            }
-        }
-
-        // Если задачу вернули в open — снимаем исполнителя
-        if ($task->status === 'open' && $task->assigned_to) {
-            $task->assigned_to = null;
-            $task->save();
-        }
-
-        $this->syncVolunteerStatus($oldAssignedTo);
-        $this->syncVolunteerStatus($task->assigned_to);
-
-        return response()->json($task->fresh('assignee'));
+    if ($request->hasFile('photo')) {
+        $path = $request->file('photo')->store('tasks', 'public');
+        $data['photo'] = '/storage/' . $path;
     }
+
+    $task->update($data);
+
+    if (
+        $oldStatus === 'done_pending' &&
+        $task->status === 'done' &&
+        $task->assigned_to
+    ) {
+        $user = User::query()->find($task->assigned_to);
+
+        if ($user) {
+            $user->points = (int) $user->points + (int) ($task->points ?? 10);
+            $user->save();
+        }
+    }
+
+    if ($task->status === 'open' && $task->assigned_to) {
+        $task->assigned_to = null;
+        $task->save();
+    }
+
+    $this->syncVolunteerStatus($oldAssignedTo);
+    $this->syncVolunteerStatus($task->assigned_to);
+
+    return response()->json($task->fresh('assignee'));
+}
 
     public function destroy(Task $task)
     {

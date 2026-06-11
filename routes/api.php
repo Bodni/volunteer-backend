@@ -88,6 +88,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/users/{user}/points', [AdminUserController::class, 'addPoints']);
     Route::post('/users/{user}/avatar', [AdminUserController::class, 'updateAvatar']);
 
+    Route::post('/users/{user}/ban', [AdminUserController::class, 'ban']);
+Route::post('/users/{user}/unban', [AdminUserController::class, 'unban']);
+
     Route::get('/best-volunteer', [AdminUserController::class, 'bestVolunteer']);
 
     Route::post('/news', [NewsController::class, 'store']);

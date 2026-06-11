@@ -22,6 +22,7 @@ class AdminUserController extends Controller
             'points',
             'avatar',
             'volunteer_status',
+            'is_banned',
             'created_at',
         ])
         ->orderBy('id');
@@ -68,30 +69,18 @@ private function ensureAdmin(Request $request)
     'points' => 0,
     'avatar' => '',
     'volunteer_status' => 'free',
+    'is_banned' => false,
 ]);
 
         return response()->json($user, 201);
     }
 
     public function destroy(User $user)
-    {
-        if ($user->role === 'admin') {
-            return response()->json([
-                'message' => 'Админа удалять нельзя',
-            ], 422);
-        }
-
-        Task::where('assigned_to', $user->id)->update([
-            'assigned_to' => null,
-            'status' => 'open',
-        ]);
-
-        $user->delete();
-
-        return response()->json([
-            'message' => 'Пользователь удалён',
-        ]);
-    }
+{
+    return response()->json([
+        'message' => 'Удаление пользователей отключено. Используйте блокировку.',
+    ], 405);
+}
 
     public function resetPassword(Request $request, User $user)
 {
@@ -141,18 +130,20 @@ public function updateAvatar(Request $request, User $user)
     return response()->json($user->fresh());
 }
     public function bestVolunteer()
-    {
-        $user = User::where('role', 'volunteer')
-            ->orderByDesc('points')
-            ->first();
+{
+    $user = User::where('role', 'volunteer')
+        ->where('is_banned', false)
+        ->orderByDesc('points')
+        ->first();
 
-        return response()->json($user);
-    }
+    return response()->json($user);
+}
 
     public function topVolunteers()
 {
-    return \App\Models\User::query()
+    return User::query()
         ->where('role', 'volunteer')
+        ->where('is_banned', false)
         ->orderByDesc('points')
         ->limit(3)
         ->get([
@@ -161,5 +152,45 @@ public function updateAvatar(Request $request, User $user)
             'points',
             'avatar',
         ]);
+}
+
+public function ban(User $user)
+{
+    if ($user->role === 'admin') {
+        return response()->json([
+            'message' => 'Администратора нельзя заблокировать',
+        ], 422);
+    }
+
+    $user->is_banned = true;
+    $user->tokens()->delete();
+    $user->save();
+
+    Task::where('assigned_to', $user->id)->update([
+        'assigned_to' => null,
+        'status' => 'open',
+    ]);
+
+    return response()->json([
+        'message' => 'Пользователь заблокирован',
+        'user' => $user->fresh(),
+    ]);
+}
+
+public function unban(User $user)
+{
+    if ($user->role === 'admin') {
+        return response()->json([
+            'message' => 'Администратора нельзя разблокировать, так как он не блокируется',
+        ], 422);
+    }
+
+    $user->is_banned = false;
+    $user->save();
+
+    return response()->json([
+        'message' => 'Пользователь разблокирован',
+        'user' => $user->fresh(),
+    ]);
 }
 }

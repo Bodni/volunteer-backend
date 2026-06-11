@@ -20,11 +20,13 @@ class User extends Authenticatable
         'points',
         'avatar',
         'volunteer_status',
+        'is_banned' => 'boolean',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        
     ];
 
     protected function casts(): array
@@ -32,6 +34,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_banned' => false,
         ];
     }
     public function rewardOrders()

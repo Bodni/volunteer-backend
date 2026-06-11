@@ -32,6 +32,7 @@ class AuthController extends Controller
             'role' => $data['role'] ?? 'volunteer',
             'points' => 0,
             'avatar' => '',
+            'is_banned' => false,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -57,6 +58,12 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->is_banned) {
+    throw ValidationException::withMessages([
+        'email' => ['Пользователь заблокирован. Обратитесь к администратору.'],
+    ]);
+}
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -65,11 +72,20 @@ class AuthController extends Controller
         ]);
     }
 
-    public function me(Request $request)
-    {
-        return response()->json($request->user());
+   public function me(Request $request)
+{
+    $user = $request->user();
+
+    if ($user?->is_banned) {
+        $user->currentAccessToken()?->delete();
+
+        return response()->json([
+            'message' => 'Пользователь заблокирован',
+        ], 403);
     }
 
+    return response()->json($user);
+}
     public function logout(Request $request)
     {
         $request->user()?->currentAccessToken()?->delete();
