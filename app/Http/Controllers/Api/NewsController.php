@@ -18,9 +18,9 @@ class NewsController extends Controller
             'published_at',
             'created_at',
         ])
-        ->selectRaw('LEFT(text, 250) as text')
-        ->orderByDesc('published_at')
-        ->orderByDesc('id');
+        ->orderByRaw('published_at IS NULL')
+->orderByDesc('published_at')
+->orderByDesc('id');
 
     if ($request->filled('search')) {
         $query->where('title', 'like', '%' . $request->search . '%');
@@ -29,6 +29,11 @@ class NewsController extends Controller
     return response()->json(
         $query->paginate($request->integer('per_page', 6))
     );
+    $perPage = min($request->integer('per_page', 6), 1000);
+
+return response()->json(
+    $query->paginate($perPage)
+);
 }
 
     public function show(News $news)
