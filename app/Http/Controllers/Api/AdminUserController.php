@@ -25,7 +25,7 @@ class AdminUserController extends Controller
             'is_banned',
             'created_at',
         ])
-        ->orderBy('id');
+        ->latest('id');
 
     if ($request->filled('role')) {
         $query->where('role', $request->role);

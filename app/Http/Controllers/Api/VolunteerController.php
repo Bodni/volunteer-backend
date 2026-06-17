@@ -11,7 +11,8 @@ class VolunteerController extends Controller
     {
         $volunteers = User::query()
             ->where('role', 'volunteer')
-            ->orderBy('id')
+->where('is_banned', false)
+->latest('id')
             ->get()
             ->map(fn (User $user) => [
                 'id' => $user->id,

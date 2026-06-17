@@ -33,7 +33,7 @@ private function ensureAdmin(Request $request)
 
     public function store(Request $request)
 {
-    $this->ensureAdmin($request);
+    
     $data = $request->validate([
         'city' => ['required', 'string', 'max:255'],
         'address' => ['required', 'string', 'max:255'],

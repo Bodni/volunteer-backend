@@ -39,7 +39,7 @@ private function ensureAdmin(Request $request)
 
     public function store(Request $request)
     {
-        $this->ensureAdmin($request);
+        
         $data = $request->validate([
             'animal_name' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
